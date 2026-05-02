@@ -115,7 +115,8 @@ def main():
     app.add_handler(CommandHandler("rules", rules))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_abuse))
     print("✅ Bot is running 24/7!")
-    app.run_polling()
+    import asyncio
+asyncio.run(app.run_polling())
 
 if __name__ == "__main__":
     main()
