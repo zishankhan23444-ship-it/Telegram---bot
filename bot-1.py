@@ -1,11 +1,8 @@
 import os
-import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-
-logging.basicConfig(level=logging.INFO)
+import telebot
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
+bot = telebot.TeleBot(BOT_TOKEN)
 
 ABUSE_WORDS = [
     'mc', 'bc', 'chutiya', 'bhosdike', 'madarchod', 'behenchod',
@@ -16,17 +13,18 @@ ABUSE_WORDS = [
 
 user_warnings = {}
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    await update.message.reply_text(
-        f"🤖 Hello {user.first_name}!\n\n"
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message,
+        f"🤖 Hello {message.from_user.first_name}!\n\n"
         f"Main Abuse Detector Bot hoon! 🛡️\n"
         f"3 warnings = Auto mute! ⚠️\n\n"
         f"/help — Sab commands dekho"
     )
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    bot.reply_to(message,
         "📋 HELP MENU\n\n"
         "🛡️ Abuse Protection:\n"
         "• Auto-detect gaali\n"
@@ -39,10 +37,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Stay respectful! ✅"
     )
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    name = update.effective_user.first_name
+@bot.message_handler(commands=['status'])
+def status(message):
+    user_id = message.from_user.id
+    name = message.from_user.first_name
     warnings = user_warnings.get(user_id, 0)
+
     if warnings == 0:
         status_msg = "🟢 Safe"
     elif warnings == 1:
@@ -51,14 +51,16 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status_msg = "🟠 Danger"
     else:
         status_msg = "🔴 Muted"
-    await update.message.reply_text(
+
+    bot.reply_to(message,
         f"📊 {name}'s Status\n\n"
         f"Status: {status_msg}\n"
         f"Warnings: {warnings}/3"
     )
 
-async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+@bot.message_handler(commands=['rules'])
+def rules(message):
+    bot.reply_to(message,
         "📋 GROUP RULES\n\n"
         "✅ Allowed:\n"
         "• Respectful baat\n"
@@ -70,23 +72,29 @@ async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⚠️ 3 warnings = mute!"
     )
 
-async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message or not update.message.text:
+@bot.message_handler(func=lambda message: True)
+def detect_abuse(message):
+    if not message.text:
         return
-    user_id = update.effective_user.id
-    name = update.effective_user.first_name
-    text = update.message.text.lower()
+
+    user_id = message.from_user.id
+    name = message.from_user.first_name
+    text = message.text.lower()
+
     found_abuse = []
     for word in ABUSE_WORDS:
         if word in text:
             found_abuse.append(word)
+
     if found_abuse:
         user_warnings[user_id] = user_warnings.get(user_id, 0) + 1
         warnings = user_warnings[user_id]
+
         try:
-            await update.message.delete()
+            bot.delete_message(message.chat.id, message.message_id)
         except:
             pass
+
         if warnings == 1:
             msg = f"⚠️ Warning 1/3\nHey {name}!\n🚫 Gaali mat karo!\nPlease respect others! 🙏"
         elif warnings == 2:
@@ -94,18 +102,9 @@ async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             msg = f"🔴 MUTED!\nHey {name}!\n3 warnings complete!\nThink about it! 🤔"
             user_warnings[user_id] = 0
-        await update.message.reply_text(msg)
 
-def main():
-    print("🤖 Abuse Detector Bot Starting...")
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("status", status))
-    app.add_handler(CommandHandler("rules", rules))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_abuse))
-    print("✅ Bot is running 24/7!")
-    app.run_polling(drop_pending_updates=True)
+        bot.reply_to(message, msg)
 
-if __name__ == "__main__":
-    main()
+print("🤖 Abuse Detector Bot Starting...")
+print("✅ Bot is running 24/7!")
+bot.polling(none_stop=True)
