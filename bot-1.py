@@ -1,16 +1,16 @@
 import os
-import asyncio
+import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# 🔑 BOT TOKEN
+logging.basicConfig(level=logging.INFO)
+
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# 🚫 ABUSE WORDS
 ABUSE_WORDS = [
     'mc', 'bc', 'chutiya', 'bhosdike', 'madarchod', 'behenchod',
     'gandu', 'laude', 'bsdk', 'randi', 'chutiye', 'bhosdi',
-    'gand', 'lund', 'chod', 'maa', 'behen', 'fuck', 'shit',
+    'gand', 'lund', 'chod', 'fuck', 'shit',
     'bitch', 'asshole', 'bastard', 'damn', 'crap', 'stupid'
 ]
 
@@ -30,7 +30,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📋 HELP MENU\n\n"
         "🛡️ Abuse Protection:\n"
         "• Auto-detect gaali\n"
-        "• 3 warnings = 2 min mute\n\n"
+        "• 3 warnings = mute\n\n"
         "📱 Commands:\n"
         "/start — Bot start\n"
         "/help — Ye menu\n"
@@ -69,7 +69,7 @@ async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• Gaali/abuse\n"
         "• Spam\n"
         "• Personal attacks\n\n"
-        "⚠️ 3 warnings = 2 min mute!"
+        "⚠️ 3 warnings = mute!"
     )
 
 async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -95,16 +95,16 @@ async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
         if warnings == 1:
-            msg = f"⚠️ Warning 1/3\nHey {name}!\n🚫 Abuse: {', '.join(found_abuse)}\nPlease respect others! 🙏"
+            msg = f"⚠️ Warning 1/3\nHey {name}!\n🚫 Gaali mat karo!\nPlease respect others! 🙏"
         elif warnings == 2:
-            msg = f"🟠 Warning 2/3\nHey {name}!\n🚫 Abuse: {', '.join(found_abuse)}\n⚠️ Last warning! Next = Mute!"
+            msg = f"🟠 Warning 2/3\nHey {name}!\n⚠️ Last warning! Next = Mute!"
         else:
-            msg = f"🔴 MUTED!\nHey {name}!\n🚫 3 warnings complete!\n⏳ Muted for 2 minutes!\nThink about it! 🤔"
+            msg = f"🔴 MUTED!\nHey {name}!\n3 warnings complete!\nThink about it! 🤔"
             user_warnings[user_id] = 0
 
         await update.message.reply_text(msg)
 
-async def main():
+def main():
     print("🤖 Abuse Detector Bot Starting...")
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -113,9 +113,7 @@ async def main():
     app.add_handler(CommandHandler("rules", rules))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_abuse))
     print("✅ Bot is running 24/7!")
-    await app.run_polling()
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
-    import nest_asyncio
-    nest_asyncio.apply()
-    asyncio.run(main())
+    main()
