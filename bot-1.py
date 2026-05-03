@@ -1,4 +1,3 @@
-
 import os
 import logging
 from telegram import Update
@@ -44,7 +43,6 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     name = update.effective_user.first_name
     warnings = user_warnings.get(user_id, 0)
-
     if warnings == 0:
         status_msg = "🟢 Safe"
     elif warnings == 1:
@@ -53,7 +51,6 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status_msg = "🟠 Danger"
     else:
         status_msg = "🔴 Muted"
-
     await update.message.reply_text(
         f"📊 {name}'s Status\n\n"
         f"Status: {status_msg}\n"
@@ -76,25 +73,20 @@ async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
-
     user_id = update.effective_user.id
     name = update.effective_user.first_name
     text = update.message.text.lower()
-
     found_abuse = []
     for word in ABUSE_WORDS:
         if word in text:
             found_abuse.append(word)
-
     if found_abuse:
         user_warnings[user_id] = user_warnings.get(user_id, 0) + 1
         warnings = user_warnings[user_id]
-
         try:
             await update.message.delete()
         except:
             pass
-
         if warnings == 1:
             msg = f"⚠️ Warning 1/3\nHey {name}!\n🚫 Gaali mat karo!\nPlease respect others! 🙏"
         elif warnings == 2:
@@ -102,7 +94,6 @@ async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             msg = f"🔴 MUTED!\nHey {name}!\n3 warnings complete!\nThink about it! 🤔"
             user_warnings[user_id] = 0
-
         await update.message.reply_text(msg)
 
 def main():
