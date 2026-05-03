@@ -1,12 +1,12 @@
 import os
-import re
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# 🔑 BOT TOKEN (Environment se lena)
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+# 🔑 BOT TOKEN
+BOT_TOKEN = os.environ.get("8066984098:AAE1m4zcstv8mF3M-BiaJWXV5yUZpmj0zUk")
 
-# 🚫 ABUSE WORDS (Hindi + English)
+# 🚫 ABUSE WORDS
 ABUSE_WORDS = [
     'mc', 'bc', 'chutiya', 'bhosdike', 'madarchod', 'behenchod',
     'gandu', 'laude', 'bsdk', 'randi', 'chutiye', 'bhosdi',
@@ -14,10 +14,8 @@ ABUSE_WORDS = [
     'bitch', 'asshole', 'bastard', 'damn', 'crap', 'stupid'
 ]
 
-# 📊 User warnings
 user_warnings = {}
 
-# 🟢 /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
@@ -106,7 +104,7 @@ async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(msg)
 
-def main():
+async def main():
     print("🤖 Abuse Detector Bot Starting...")
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -115,8 +113,7 @@ def main():
     app.add_handler(CommandHandler("rules", rules))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_abuse))
     print("✅ Bot is running 24/7!")
-    import asyncio
-asyncio.run(app.run_polling())
+    await app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
