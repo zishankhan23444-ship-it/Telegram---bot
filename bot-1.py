@@ -1,7 +1,7 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,17 +16,17 @@ ABUSE_WORDS = [
 
 user_warnings = {}
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def start(update: Update, context: CallbackContext):
     user = update.effective_user
-    await update.message.reply_text(
+    update.message.reply_text(
         f"🤖 Hello {user.first_name}!\n\n"
         f"Main Abuse Detector Bot hoon! 🛡️\n"
         f"3 warnings = Auto mute! ⚠️\n\n"
         f"/help — Sab commands dekho"
     )
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+def help_command(update: Update, context: CallbackContext):
+    update.message.reply_text(
         "📋 HELP MENU\n\n"
         "🛡️ Abuse Protection:\n"
         "• Auto-detect gaali\n"
@@ -39,7 +39,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Stay respectful! ✅"
     )
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def status(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     name = update.effective_user.first_name
     warnings = user_warnings.get(user_id, 0)
@@ -53,14 +53,14 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         status_msg = "🔴 Muted"
 
-    await update.message.reply_text(
+    update.message.reply_text(
         f"📊 {name}'s Status\n\n"
         f"Status: {status_msg}\n"
         f"Warnings: {warnings}/3"
     )
 
-async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+def rules(update: Update, context: CallbackContext):
+    update.message.reply_text(
         "📋 GROUP RULES\n\n"
         "✅ Allowed:\n"
         "• Respectful baat\n"
@@ -72,7 +72,7 @@ async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⚠️ 3 warnings = mute!"
     )
 
-async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def detect_abuse(update: Update, context: CallbackContext):
     if not update.message or not update.message.text:
         return
 
@@ -90,7 +90,7 @@ async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
         warnings = user_warnings[user_id]
 
         try:
-            await update.message.delete()
+            update.message.delete()
         except:
             pass
 
@@ -102,18 +102,20 @@ async def detect_abuse(update: Update, context: ContextTypes.DEFAULT_TYPE):
             msg = f"🔴 MUTED!\nHey {name}!\n3 warnings complete!\nThink about it! 🤔"
             user_warnings[user_id] = 0
 
-        await update.message.reply_text(msg)
+        update.message.reply_text(msg)
 
 def main():
     print("🤖 Abuse Detector Bot Starting...")
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("status", status))
-    app.add_handler(CommandHandler("rules", rules))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_abuse))
+    updater = Updater(BOT_TOKEN)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help_command))
+    dp.add_handler(CommandHandler("status", status))
+    dp.add_handler(CommandHandler("rules", rules))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, detect_abuse))
     print("✅ Bot is running 24/7!")
-    app.run_polling(drop_pending_updates=True)
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == "__main__":
     main()
