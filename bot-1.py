@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 # 🔑 BOT TOKEN
-BOT_TOKEN = os.environ.get("8066984098:AAE1m4zcstv8mF3M-BiaJWXV5yUZpmj0zUk")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 # 🚫 ABUSE WORDS
 ABUSE_WORDS = [
