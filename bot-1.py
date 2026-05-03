@@ -114,7 +114,7 @@ def main():
     app.add_handler(CommandHandler("rules", rules))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_abuse))
     print("✅ Bot is running 24/7!")
-    app.run_polling(drop_pending_updates=True)
+    app.run_polling(drop_pending_updates=True, close_loop=False)
 
 if __name__ == "__main__":
     main()
